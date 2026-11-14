@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="回声是一个轻量、无需登录的实时网页聊天室。选一个频道，和朋友们聊聊天。"
+    />
+    <meta name="theme-color" content="#0b211b" />
+    <title>回声 · 简易聊天室</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar" aria-label="频道与在线成员">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <path
+                d="M8 10.5C8 8.57 9.57 7 11.5 7h9C22.43 7 24 8.57 24 10.5v7c0 1.93-1.57 3.5-3.5 3.5H15l-4.8 3.6c-.66.49-1.6.02-1.6-.81V20.7A3.5 3.5 0 0 1 8 17.5v-7Z"
+                fill="currentColor"
+              />
+              <path d="M12 12.2h8M12 15.8h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+          </div>
+          <div class="brand-copy">
+            <h1>回声</h1>
+            <p>ECHO ROOM</p>
+          </div>
+          <button class="icon-button sidebar-close" id="sidebarClose" type="button" aria-label="关闭频道列表">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 6 12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="sidebar-scroll">
+          <div class="section-heading">
+            <span>频道</span>
+            <span class="section-count" id="roomCount">00</span>
+          </div>
+          <nav class="room-list" id="roomList" aria-label="聊天频道">
+            <div class="room-skeleton" aria-hidden="true"></div>
+            <div class="room-skeleton" aria-hidden="true"></div>
+            <div class="room-skeleton" aria-hidden="true"></div>
+          </nav>
+
+          <section class="presence-card" aria-labelledby="presenceTitle">
+            <div class="presence-heading">
+              <div>
+                <p class="eyebrow">现在在线</p>
+                <h2 id="presenceTitle"><span id="onlineCount">0</span> 位朋友</h2>
+              </div>
+              <span class="live-badge"><i></i> LIVE</span>
+            </div>
+            <div class="avatar-stack" id="avatarStack" aria-hidden="true">
+              <span class="avatar avatar--0 avatar--waiting">·</span>
+            </div>
+            <p class="presence-names" id="presenceNames">正在等待大家加入…</p>
+          </section>
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="profile">
+            <div class="avatar profile-avatar" id="profileAvatar" aria-hidden="true">?</div>
+            <div class="profile-copy">
+              <span>我的昵称</span>
+              <strong id="profileName">未设置</strong>
+            </div>
+            <button class="icon-button edit-name-button" id="editNameButton" type="button" aria-label="修改昵称">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m14.5 6.5 3 3M5 19l3.8-.8L19 8a1.98 1.98 0 0 0-2.8-2.8L6 15.4 5 19Z" />
+              </svg>
+            </button>
+          </div>
+          <p class="privacy-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="10" width="14" height="10" rx="2.5" />
+              <path d="M8.5 10V7.8a3.5 3.5 0 0 1 7 0V10" />
+            </svg>
+            公开聊天 · 消息仅暂存在内存中
+          </p>
+        </div>
+      </aside>
+
+      <button class="sidebar-backdrop" id="sidebarBackdrop" type="button" aria-label="关闭频道列表"></button>
+
+      <main class="chat">
+        <header class="topbar">
+          <button class="icon-button menu-button" id="menuButton" type="button" aria-label="打开频道列表">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h10" />
+            </svg>
+          </button>
+
+          <div class="room-heading">
+            <div class="room-heading-icon" id="roomIcon" aria-hidden="true">☕</div>
+            <div class="room-heading-copy">
+              <div class="room-title-row">
+                <h2 id="roomName">大厅</h2>
+                <span class="room-slug" id="roomSlug"># lobby</span>
+              </div>
+              <p id="roomDescription">随便聊聊，认识一下</p>
+            </div>
+          </div>
+
+          <div class="topbar-actions">
+            <span class="connection-status" id="connectionStatus" data-state="connecting" role="status">
+              <i aria-hidden="true"></i>
+              <span id="connectionLabel">连接中</span>
+            </span>
+            <button class="share-button" id="shareButton" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="17" cy="6" r="2.5" />
+                <circle cx="7" cy="12" r="2.5" />
+                <circle cx="17" cy="18" r="2.5" />
+                <path d="m9.2 10.9 5.6-3.2M9.2 13.1l5.6 3.2" />
+              </svg>
+              <span>邀请朋友</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="conversation">
+          <section class="message-scroller" id="messageScroller" aria-label="聊天消息">
+            <div class="message-list" id="messageList" aria-live="polite" aria-relevant="additions">
+              <div class="loading-state" id="loadingState">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+          </section>
+          <button class="scroll-bottom-button" id="scrollBottomButton" type="button" hidden>
+            <span>有新消息</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+          </button>
+        </div>
+
+        <div class="composer-area">
+          <div class="emoji-picker" id="emojiPicker" role="dialog" aria-label="选择表情" hidden></div>
+          <form class="composer" id="messageForm" autocomplete="off">
+            <div class="composer-row">
+              <button
+                class="icon-button emoji-button"
+                id="emojiButton"
+                type="button"
+                aria-label="选择表情"
+                aria-expanded="false"
+                aria-controls="emojiPicker"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8.5" />
+                  <path d="M8.5 14.3c.8 1.5 2 2.2 3.5 2.2s2.7-.7 3.5-2.2M9 9.7h.01M15 9.7h.01" />
+                </svg>
+              </button>
+              <textarea
+                id="messageInput"
+                name="message"
+                rows="1"
+                maxlength="500"
+                placeholder="说点什么…"
+                aria-label="消息内容"
+              ></textarea>
+              <button class="send-button" id="sendButton" type="submit" disabled>
+                <span>发送</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m5 12 14-7-4.2 14-3.2-5.1L5 12Z" />
+                  <path d="m11.6 13.9 3.7-3.7" />
+                </svg>
+              </button>
+            </div>
+            <div class="composer-meta">
+              <span>Enter 发送 · Shift + Enter 换行</span>
+              <span id="charCount">0 / 500</span>
+            </div>
+          </form>
+          <p class="composer-note">保持友善，也请勿发送隐私或敏感信息。</p>
+        </div>
+      </main>
+    </div>
+
+    <dialog class="name-dialog" id="nameDialog">
+      <form class="name-form" id="nameForm" novalidate>
+        <button class="dialog-close icon-button" id="dialogClose" type="button" aria-label="关闭" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+        </button>
+        <div class="dialog-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path
+              d="M8 10.5C8 8.57 9.57 7 11.5 7h9C22.43 7 24 8.57 24 10.5v7c0 1.93-1.57 3.5-3.5 3.5H15l-4.8 3.6c-.66.49-1.6.02-1.6-.81V20.7A3.5 3.5 0 0 1 8 17.5v-7Z"
+              fill="currentColor"
+            />
+            <path d="M12 12.2h8M12 15.8h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </div>
+        <p class="eyebrow">WELCOME TO ECHO</p>
+        <h2 id="dialogTitle">给自己起个名字</h2>
+        <p class="dialog-copy" id="dialogCopy">不用注册，也不用密码。选一个喜欢的小名字，马上开始聊天。</p>
+        <label for="nameInput">你的昵称</label>
+        <div class="name-input-wrap">
+          <span aria-hidden="true">@</span>
+          <input
+            id="nameInput"
+            name="nickname"
+            type="text"
+            maxlength="16"
+            autocomplete="nickname"
+            placeholder="例如：小林"
+            spellcheck="false"
+          />
+          <span class="name-limit">最多 16 字</span>
+        </div>
+        <p class="field-error" id="nameError" role="alert" hidden></p>
+        <button class="primary-button" id="nameSubmitButton" type="submit">
+          <span>进入聊天室</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </button>
+        <p class="dialog-footnote">昵称只保存在你的浏览器中。</p>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    <noscript>
+      <p class="noscript-message">请启用 JavaScript 后使用回声聊天室。</p>
+    </noscript>
+
+    <template id="messageTemplate">
+      <article class="message">
+        <div class="avatar message-avatar" aria-hidden="true"></div>
+        <div class="message-body">
+          <div class="message-meta">
+            <span class="message-name"></span>
+            <time class="message-time"></time>
+          </div>
+          <div class="message-bubble"></div>
+        </div>
+      </article>
+    </template>
+
+    <template id="dateTemplate">
+      <div class="date-divider"><span></span></div>
+    </template>
+
+    <template id="emptyTemplate">
+      <div class="empty-state">
+        <div class="empty-orbit" aria-hidden="true">
+          <span class="empty-orbit-ring"></span>
+          <span class="empty-orbit-icon">✦</span>
+        </div>
+        <p class="eyebrow">A QUIET START</p>
+        <h3 id="emptyTitle">这里还很安静</h3>
+        <p id="emptyCopy">说声「你好」，成为这个频道里的第一位朋友吧。</p>
+      </div>
+    </template>
+  </body>
+</html>
